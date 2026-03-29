@@ -1,3 +1,3 @@
 class AppConfig {
-  static const String baseUrl = "http://192.168.0.110:8001";
+  static const String baseUrl = "https://qubrix-q5ai.onrender.com";
 }
