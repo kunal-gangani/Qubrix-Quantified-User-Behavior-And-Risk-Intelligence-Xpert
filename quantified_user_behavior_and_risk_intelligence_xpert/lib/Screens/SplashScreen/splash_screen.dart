@@ -113,12 +113,12 @@ class _SplashView extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFC99222).withOpacity(0.4),
+                color: const Color(0xFFC99222).withValues(alpha: 0.4),
                 blurRadius: 30,
                 spreadRadius: 8,
               ),
               BoxShadow(
-                color: const Color(0xFF00D9FF).withOpacity(0.2),
+                color: const Color(0xFF00D9FF).withValues(alpha: 0.2),
                 blurRadius: 20,
                 spreadRadius: 2,
               ),
@@ -199,7 +199,7 @@ class _SplashView extends StatelessWidget {
             'Powered by AI',
             style: GoogleFonts.orbitron(
               fontSize: 11,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -222,7 +222,7 @@ class _SplashView extends StatelessWidget {
             'v${AppConstants.appVersion}',
             style: GoogleFonts.orbitron(
               fontSize: 10,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               letterSpacing: 2,
             ),
           ),

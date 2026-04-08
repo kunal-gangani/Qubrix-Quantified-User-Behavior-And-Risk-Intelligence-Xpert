@@ -83,7 +83,7 @@ class ResultScreen extends StatelessWidget {
                   ),
                   backgroundColor: _levelColor(
                     data.riskLevel,
-                  ).withOpacity(0.15),
+                  ).withValues(alpha: 0.15),
                   side: BorderSide(color: _levelColor(data.riskLevel)),
                 ),
                 const SizedBox(height: 16),
@@ -104,7 +104,7 @@ class ResultScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.08),
+                    color: Colors.red.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.primary),
                   ),

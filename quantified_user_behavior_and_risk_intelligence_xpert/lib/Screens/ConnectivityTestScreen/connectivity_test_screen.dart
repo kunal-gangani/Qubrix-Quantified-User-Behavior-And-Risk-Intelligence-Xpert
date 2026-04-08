@@ -53,7 +53,7 @@ class _ConnectivityTestView extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border(left: BorderSide(color: statusColor, width: 6)),
-            color: AppColors.bgSecondary.withOpacity(0.5),
+            color: AppColors.bgSecondary.withValues(alpha: 0.5),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
