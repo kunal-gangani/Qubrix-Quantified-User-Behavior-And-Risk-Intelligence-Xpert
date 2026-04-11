@@ -9,11 +9,11 @@ from notion_client import Client
 app = FastAPI(title="Qubrix Backend", version="0.3.0")
 
 app.add_middleware(
-	CORSMiddleware,
-	allow_origins=["*"],
-	allow_credentials=True,
-	allow_methods=["*"],
-	allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 NOTION_API_KEY = os.getenv("NOTION_API_KEY", "")
