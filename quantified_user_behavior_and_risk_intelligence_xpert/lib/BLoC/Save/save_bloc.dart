@@ -17,6 +17,7 @@ class SaveBloc extends Bloc<SaveEvent, SaveState> {
     Emitter<SaveState> emit,
   ) async {
     emit(const SaveLoading());
+
     try {
       final req = SaveRequest(
         riskScore: event.riskScore,

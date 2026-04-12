@@ -27,7 +27,8 @@ class ResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (data.riskScore.clamp(0, 100)) / 100.0;
+    final double score = data.riskScore.toDouble();
+    final progress = (score.clamp(0, 100)) / 100.0;
 
     return BlocProvider(
       create: (_) => SaveBloc(apiService: ApiService()),
@@ -56,7 +57,7 @@ class ResultScreen extends StatelessWidget {
             child: ListView(
               children: [
                 Text(
-                  "Risk Score: ${data.riskScore.toStringAsFixed(1)}/100",
+                  "Risk Score: ${data.riskScore}/100",
                   style: AppFonts.displayMedium.copyWith(
                     color: AppColors.primary,
                   ),
@@ -83,10 +84,11 @@ class ResultScreen extends StatelessWidget {
                   ),
                   backgroundColor: _levelColor(
                     data.riskLevel,
-                  ).withValues(alpha: 0.15),
+                  ).withOpacity(0.15),
                   side: BorderSide(color: _levelColor(data.riskLevel)),
                 ),
                 const SizedBox(height: 16),
+
                 Text(
                   "Analysis",
                   style: AppFonts.headlineMedium.copyWith(
@@ -101,10 +103,11 @@ class ResultScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.08),
+                    color: Colors.red.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.primary),
                   ),
@@ -126,6 +129,7 @@ class ResultScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 Text(
                   "Recommendations",
                   style: AppFonts.headlineMedium.copyWith(
@@ -157,12 +161,14 @@ class ResultScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 16),
                 Text(
                   data.userWarning,
                   style: AppFonts.titleMedium.copyWith(color: Colors.orange),
                 ),
                 const SizedBox(height: 20),
+
                 BlocBuilder<SaveBloc, SaveState>(
                   builder: (context, state) {
                     final saving = state is SaveLoading;

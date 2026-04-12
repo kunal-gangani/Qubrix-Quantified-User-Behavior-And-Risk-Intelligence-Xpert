@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 abstract class SaveEvent extends Equatable {
   const SaveEvent();
+
   @override
   List<Object?> get props => [];
 }
