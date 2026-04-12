@@ -1,17 +1,16 @@
 <div align="center">
 
-<!-- ANIMATED TYPING HEADER -->
 <img src="https://readme-typing-svg.demolab.com?font=Orbitron&size=13&duration=3000&pause=1000&color=00F0FF&center=true&vCenter=true&width=500&lines=AI-POWERED+DIGITAL+IDENTITY+RISK+ANALYZER;DEEPFAKE+%26+VOICE+CLONE+THREAT+SIMULATOR;QUANTIFIED+USER+BEHAVIOR+%26+RISK+INTELLIGENCE" alt="Typing SVG" />
 
 <br/>
 
 ```
- ██████╗ ██╗   ██╗██████╗ ██████╗ ██╗██╗  ██╗
+██████╗ ██╗   ██╗██████╗ ██████╗ ██╗██╗   ██╗
 ██╔═══██╗██║   ██║██╔══██╗██╔══██╗██║╚██╗██╔╝
-██║   ██║██║   ██║██████╔╝██████╔╝██║ ╚███╔╝ 
-██║▄▄ ██║██║   ██║██╔══██╗██╔══██╗██║ ██╔██╗ 
-╚██████╔╝╚██████╔╝██████╔╝██║  ██║██║██╔╝ ██╗
- ╚══▀▀═╝  ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝
+██║   ██║██║   ██║██████╔╝██████╔╝██║ ╚███╔╝
+██║▄▄ ██║██║   ██║██╔══██╗██╔══██╗██║ ██╔██╗
+╚██████╔╝╚██████╔╝██████╔╝██║   ██║██║██╔╝ ██╗
+╚══▀▀═╝  ╚═════╝ ╚═════╝ ╚═╝   ╚═╝╚═╝╚═╝  ╚═╝
 ```
 
 **Quantified User Behavior and Risk Intelligence eXpert**
@@ -59,12 +58,14 @@ It delivers a quantified **risk score**, simulates possible impersonation attack
 ## 🔄 App Flow
 
 ```
+
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │             │     │             │     │             │     │             │     │             │
 │  👤  USER   │────▶│ 📊  ANALYZE │────▶│ 🤖  AI SIM  │────▶│ 📱 RESULTS  │────▶│ 📋  NOTION  │
 │    INPUT    │     │    RISK     │     │  DEEPFAKE   │     │  DISPLAY    │     │    SAVE     │
 │             │     │             │     │             │     │             │     │             │
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+
 ```
 
 ---
@@ -78,7 +79,7 @@ It delivers a quantified **risk score**, simulates possible impersonation attack
 | 📱 **Frontend** | Flutter · Dart |
 | ⚙️ **Backend** | FastAPI · Python |
 | 🔗 **Integration** | Notion API |
-| 🤖 **Intelligence** | AI / LLM APIs |
+| 🤖 **Intelligence** | xAI Grok API |
 
 </div>
 
@@ -87,100 +88,132 @@ It delivers a quantified **risk score**, simulates possible impersonation attack
 ## 📁 Project Structure
 
 ```
+
 qubrix/
 │
-├── 📱 flutter_app/
+├── 📱 flutter_app/           # Flutter mobile application
 │   └── lib/
+│       ├── bloc/             # State management (BLoC)
 │       ├── screens/          # UI screens (Input, Result, History)
-│       └── services/         # API calls, Notion integration
+│       └── services/         # API clients
 │
-├── ⚙️  backend/
-│   ├── main.py               # FastAPI entry point
-│   └── routes/               # /analyze · /save endpoints
+├── ⚙️  backend/               # Python FastAPI service
+│   ├── main.py               # Entry point & scoring logic
+│   └── requirements.txt      # Backend dependencies
 │
-└── 📄 README.md
+└── 📄 README.md              # Project documentation
+
 ```
 
 ---
 
-## 🚀 Installation
+## 🚀 Installation & Setup
 
-### Flutter App
+### 1. Backend Server (FastAPI)
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/qubrix.git
+1. **Setup Environment**
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # Windows: .\venv\Scripts\activate
+   ```
 
-# 2. Navigate to Flutter project
-cd flutter_app
+2.  **Install Dependencies**
 
-# 3. Install dependencies
-flutter pub get
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-# 4. Run the app
-flutter run
-```
+3.  **Configure Env Variables**
+    Set these in your `.env` file or hosting dashboard:
 
-### Backend Server
+      - `NOTION_API_KEY`: Your Notion Integration Secret
+      - `NOTION_DATABASE_ID`: Your Notion Database ID
+      - `XAI_API_KEY`: Your xAI API Key
 
-```bash
-# 1. Navigate to backend
-cd backend
+4.  **Run Server**
 
-# 2. Install Python dependencies
-pip install -r requirements.txt
+    ```bash
+    uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    ```
 
-# 3. Start the server
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
+### 2. Flutter App
 
----
+1.  **Install Dependencies**
+
+    ```bash
+    cd flutter_app
+    flutter pub get
+    ```
+
+2.  **Configure API Endpoint**
+    Update your base URL in your config or service file:
+
+    ```dart
+    static const String baseUrl = "https://your-backend-url.com";
+    ```
+
+3.  **Run the App**
+
+    ```bash
+    flutter run
+    ```
+
+-----
 
 ## 🔌 API Endpoints
 
 | Method | Endpoint | Description |
 |:---:|---|---|
-| `POST` | `/analyze` | Analyze digital exposure & generate risk score |
-| `POST` | `/save` | Save results to Notion workspace |
+| `GET` | `/health` | Verify backend connectivity |
+| `POST` | `/analyze` | Analyze exposure & generate risk score |
+| `POST` | `/save` | Log results to Notion workspace |
 
----
+-----
+
+## 📋 Notion Database Schema
+
+Ensure your Notion table contains these exact property names for successful integration:
+
+  * **Name** (Title)
+  * **Risk Score** (Number)
+  * **Risk Level** (Select: Low, Medium, High)
+  * **Analysis** (Text)
+  * **Timestamp** (Date)
+
+-----
 
 ## 🗺️ Roadmap
 
-- [x] Digital exposure analysis
-- [x] AI-based risk scoring
-- [x] Impersonation simulation
-- [x] Notion integration
-- [ ] 🎬 Real deepfake detection engine
-- [ ] 🎙️ Voice cloning detection
-- [ ] 🌐 Browser extension
-- [ ] 🏢 Enterprise dashboard
+  - [x] Digital exposure analysis
+  - [x] AI-based risk scoring
+  - [x] Impersonation simulation
+  - [x] Notion integration
+  - [ ] 🎬 Real deepfake detection engine
+  - [ ] 🎙️ Voice cloning detection
+  - [ ] 🌐 Browser extension
+  - [ ] 🏢 Enterprise dashboard
 
----
+-----
 
 ## 🤝 Contributing
 
-Contributions are welcome!
+1.  Fork the repository
+2.  Create your feature branch — `git checkout -b feature/your-feature`
+3.  Commit your changes — `git commit -m 'Add some feature'`
+4.  Push to the branch — `git push origin feature/your-feature`
+5.  Open a Pull Request
 
-1. Fork the repository
-2. Create your feature branch — `git checkout -b feature/your-feature`
-3. Commit your changes — `git commit -m 'Add some feature'`
-4. Push to the branch — `git push origin feature/your-feature`
-5. Open a Pull Request
-
----
+-----
 
 ## 📜 License
 
 This project is built for **educational and research purposes**.
 
----
+-----
 
 <div align="center">
 
-**QUBRIX** · Built with Flutter & AI
-
-![Made with ❤️](https://img.shields.io/badge/Made%20with-%E2%9D%A4%EF%B8%8F-ff3e6c?style=flat-square)
-![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-00ff88?style=flat-square)
+**QUBRIX** · Built by Kunal Gangani
 
 </div>

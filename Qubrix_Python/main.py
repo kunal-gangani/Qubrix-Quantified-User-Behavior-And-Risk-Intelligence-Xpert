@@ -1,131 +1,132 @@
-from fastapi import FastAPI
+import os
+import json
+import logging
+import requests
+from datetime import datetime
+from typing import Literal, List, Optional, Tuple
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Literal, List, Optional
-from datetime import datetime
-import os
 from notion_client import Client
 
-app = FastAPI(title="Qubrix Backend", version="0.3.0")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Qubrix Backend", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 NOTION_API_KEY = os.getenv("NOTION_API_KEY", "")
-NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID", "")
+NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID", "").replace("-", "")
+XAI_API_KEY = os.getenv("XAI_API_KEY", "")
+XAI_MODEL = os.getenv("XAI_MODEL", "grok-beta") 
+XAI_BASE_URL = "https://api.x.ai/v1"
+
 notion = Client(auth=NOTION_API_KEY) if NOTION_API_KEY else None
 
-@app.get("/")
-def root():
-	return {"message": "Qubrix backend is running", "try": ["/health", "/docs"]}
-
-@app.get("/health")
-def health():
-	return {"status": "ok", "message": "Qubrix backend is running"}
-
 class AnalyzeRequest(BaseModel):
-	images_count: int = Field(ge=0, le=500)
-	voice_seconds: int = Field(ge=0, le=3600)
-	social_presence: Literal["low", "medium", "high"]
+    images_count: int = Field(0, ge=0, le=500)
+    voice_seconds: int = Field(0, ge=0, le=3600)
+    social_presence: Literal["low", "medium", "high"]
 
 class AnalyzeResponse(BaseModel):
-	risk_score: int
-	risk_level: Literal["Low", "Medium", "High"]
-	analysis: str
-	impersonation_message: str
-	recommendations: List[str]
-	user_warning: str
-
-@app.post("/analyze", response_model=AnalyzeResponse)
-def analyze(payload: AnalyzeRequest):
-	score = 0
-	score += min(payload.images_count * 2, 40)
-	score += min(int(payload.voice_seconds / 3), 40)
-
-	if payload.social_presence == "low":
-		score += 5
-	elif payload.social_presence == "medium":
-		score += 12
-	else:
-		score += 20
-
-	score = max(0, min(100, score))
-
-	if score < 35:
-		level: Literal["Low", "Medium", "High"] = "Low"
-	elif score < 70:
-		level = "Medium"
-	else:
-		level = "High"
-
-	analysis = (
-		f"We detected enough public material to attempt a convincing profile clone. "
-		f"Images: {payload.images_count}, voice: {payload.voice_seconds}s, presence: {payload.social_presence}. "
-		f"Overall risk is {level.lower()}."
-	)
-
-	impersonation_message = (
-		"Hey, it’s me — I changed my number. Can you send the OTP you just received? Need to log in urgently."
-		if level != "Low"
-		else "Hi, quick check: is this still your number? I might have messaged the wrong contact."
-	)
-
-	recommendations = [
-		"Enable 2-factor authentication on email and social accounts.",
-		"Lock down social profiles and remove public phone/email if visible.",
-		"Set a family/friends verification phrase for urgent requests.",
-		"Be cautious with unknown calls requesting voice samples or OTPs.",
-	]
-	if level == "High":
-		recommendations.insert(0, "Treat unexpected messages as potential impersonation until verified.")
-	if level == "Low":
-		recommendations.append("Keep monitoring new public posts and review privacy settings monthly.")
-
-	user_warning = "Never share OTPs or password reset codes, even if the message looks real."
-
-	return AnalyzeResponse(
-		risk_score=score,
-		risk_level=level,
-		analysis=analysis,
-		impersonation_message=impersonation_message,
-		recommendations=recommendations,
-		user_warning=user_warning,
-	)
+    risk_score: int
+    risk_level: Literal["Low", "Medium", "High"]
+    analysis: str
+    impersonation_message: str
+    recommendations: List[str]
+    user_warning: str
 
 class SaveRequest(BaseModel):
-	risk_score: int
-	risk_level: Literal["Low", "Medium", "High"]
-	analysis: str
-	timestamp: Optional[str] = None  
+    risk_score: int
+    risk_level: str
+    analysis: str
+    timestamp: Optional[str] = None
 
-class SaveResponse(BaseModel):
-	success: bool
-	message: str
-	notion_page_id: Optional[str] = None
+def grok_generate(payload: AnalyzeRequest, risk_level: str) -> Tuple[str, List[str]]:
+    if not XAI_API_KEY:
+        raise ValueError("XAI_API_KEY not set")
 
-@app.post("/save", response_model=SaveResponse)
-def save_to_notion(payload: SaveRequest):
-	if not NOTION_API_KEY or not NOTION_DATABASE_ID or notion is None:
-		return SaveResponse(success=False, message="Notion integration not configured on server")
+    prompt = (
+        f"Context: User has {payload.images_count} public images, {payload.voice_seconds}s of audio, "
+        f"and {payload.social_presence} social presence. Risk Level: {risk_level}.\n"
+        "1. Write one realistic 2-sentence scam message a hacker would send using this data.\n"
+        "2. Provide 5 advanced, non-generic security tips.\n"
+        "Format as JSON: {\"message\": \"...\", \"tips\": [\"...\", \"...\"]}"
+    )
 
-	ts = payload.timestamp or datetime.now().isoformat()
+    try:
+        response = requests.post(
+            f"{XAI_BASE_URL}/chat/completions",
+            headers={"Authorization": f"Bearer {XAI_API_KEY}"},
+            json={
+                "model": XAI_MODEL,
+                "messages": [
+                    {"role": "system", "content": "You are a cybersecurity expert. Output valid JSON only."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.6
+            },
+            timeout=10
+        )
+        response.raise_for_status()
+        data = response.json()
+        content = data["choices"][0]["message"]["content"].replace("```json", "").replace("```", "").strip()
+        parsed = json.loads(content)
+        return parsed["message"], parsed["tips"]
+    except Exception as e:
+        logger.error(f"Grok Error: {e}")
+        raise e
 
-	try:
-		page = notion.pages.create(
-			parent={"database_id": NOTION_DATABASE_ID},
-			properties={
-				"Name": {"title": [{"text": {"content": f"{payload.risk_level} Risk - {ts}"}}]},
-				"Risk Score": {"number": payload.risk_score},
-				"Risk Level": {"select": {"name": payload.risk_level}},
-				"Timestamp": {"date": {"start": ts}},
-				"Analysis": {"rich_text": [{"text": {"content": payload.analysis}}]},
-			},
-		)
-		return SaveResponse(success=True, message="Saved to Notion", notion_page_id=page["id"])
-	except Exception as e:
-		return SaveResponse(success=False, message=f"Error saving to Notion: {str(e)}")
+@app.post("/analyze", response_model=AnalyzeResponse)
+async def analyze(payload: AnalyzeRequest):
+    score = min((payload.images_count * 2) + (payload.voice_seconds // 3), 80)
+    presence_map = {"low": 5, "medium": 12, "high": 20}
+    score += presence_map.get(payload.social_presence, 0)
+    score = min(100, score)
+
+    level = "Low" if score < 35 else "Medium" if score < 70 else "High"
+    
+    im_msg = "Hey, it's me. I'm using a temporary number. Can you verify a code for me?"
+    recs = ["Enable 2FA", "Limit public social media exposure", "Use a vault for sensitive ID docs"]
+
+    try:
+        im_msg, recs = grok_generate(payload, level)
+    except:
+        logger.warning("Using fallback content due to Grok failure.")
+
+    return {
+        "risk_score": score,
+        "risk_level": level,
+        "analysis": f"Based on {payload.images_count} images and {payload.voice_seconds}s of voice data, your identity footprint is significant.",
+        "impersonation_message": im_msg,
+        "recommendations": recs,
+        "user_warning": "Qubrix never asks for your credentials via text."
+    }
+
+@app.post("/save")
+async def save(payload: SaveRequest):
+    if not notion:
+        return {"success": False, "message": "Notion not configured"}
+    
+    try:
+        notion.pages.create(
+            parent={"database_id": NOTION_DATABASE_ID},
+            properties={
+                "Name": {"title": [{"text": {"content": f"Scan {datetime.now().strftime('%Y-%m-%d %H:%M')}"}}]},
+                "Risk Score": {"number": payload.risk_score},
+                "Risk Level": {"select": {"name": payload.risk_level}},
+                "Analysis": {"rich_text": [{"text": {"content": payload.analysis[:2000]}}]}
+            }
+        )
+        return {"success": True, "message": "Logged to Notion"}
+    except Exception as e:
+        logger.error(f"Notion Save Error: {e}")
+        return {"success": False, "message": str(e)}
